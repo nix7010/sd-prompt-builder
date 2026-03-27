@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SD Prompt Builder Pro</title>
+<style>
+  :root{
+    --bg-main:#0f0f1a;--bg-sidebar:#12121f;--bg-input:#161625;--bg-card:#1e1e30;
+    --bg-header:linear-gradient(135deg,#1a1a2e,#16213e);
+    --border:#222;--border-light:#333;--border-focus:#e94560;
+    --text:#e0e0e0;--text-muted:#888;--text-dim:#666;
+    --accent:#e94560;--accent-hover:#ff6b81;
+    --tag-bg:#1e1e30;--tag-border:#333;--tag-hover:#2a2a45;
+    --selected-tag-bg:#2a2a40;--selected-tag-border:#444;
+    --cat-big-color:#e94560;--cat-active-bg:#1a1a2e;
+    --sub-heading-border:#2a2a3a;
+    --toast-bg:#e94560;
+    --scrollbar:#333;
+  }
+  [data-theme="midnight-blue"]{
+    --bg-main:#0a1628;--bg-sidebar:#0d1b2a;--bg-input:#111d2e;--bg-card:#162236;
+    --bg-header:linear-gradient(135deg,#0d1b2a,#1b2838);
+    --border:#1a2a3f;--border-light:#243b55;--border-focus:#4fc3f7;
+    --text:#cfd8dc;--text-muted:#78909c;--text-dim:#546e7a;
+    --accent:#4fc3f7;--accent-hover:#81d4fa;
+    --tag-bg:#162236;--tag-border:#243b55;--tag-hover:#1e3a5f;
+    --selected-tag-bg:#1a3050;--selected-tag-border:#2a4a6a;
+    --cat-big-color:#4fc3f7;--cat-active-bg:#0d1b2a;
+    --sub-heading-border:#1a2a3f;
+    --toast-bg:#4fc3f7;
+    --scrollbar:#243b55;
+  }
+  [data-theme="dark-purple"]{
+    --bg-main:#1a0a2e;--bg-sidebar:#150826;--bg-input:#1e0e35;--bg-card:#261440;
+    --bg-header:linear-gradient(135deg,#1a0a2e,#2d1055);
+    --border:#2a1545;--border-light:#3d1f60;--border-focus:#bb86fc;
+    --text:#e0d0f0;--text-muted:#9575cd;--text-dim:#7e57c2;
+    --accent:#bb86fc;--accent-hover:#d1a8ff;
+    --tag-bg:#261440;--tag-border:#3d1f60;--tag-hover:#351a55;
+    --selected-tag-bg:#2d1555;--selected-tag-border:#4a2080;
+    --cat-big-color:#bb86fc;--cat-active-bg:#1e0e35;
+    --sub-heading-border:#2a1545;
+    --toast-bg:#bb86fc;
+    --scrollbar:#3d1f60;
+  }
+  [data-theme="light"]{
+    --bg-main:#f5f5f5;--bg-sidebar:#ffffff;--bg-input:#fafafa;--bg-card:#ffffff;
+    --bg-header:linear-gradient(135deg,#667eea,#764ba2);
+    --border:#e0e0e0;--border-light:#d0d0d0;--border-focus:#667eea;
+    --text:#333;--text-muted:#777;--text-dim:#999;
+    --accent:#667eea;--accent-hover:#7c8ff8;
+    --tag-bg:#fff;--tag-border:#d0d0d0;--tag-hover:#f0f0ff;
+    --selected-tag-bg:#e8eaf6;--selected-tag-border:#c5cae9;
+    --cat-big-color:#667eea;--cat-active-bg:#f0f0ff;
+    --sub-heading-border:#e0e0e0;
+    --toast-bg:#667eea;
+    --scrollbar:#ccc;
+  }
+  [data-theme="sepia"]{
+    --bg-main:#f4ece1;--bg-sidebar:#efe5d7;--bg-input:#f0e8da;--bg-card:#faf3e8;
+    --bg-header:linear-gradient(135deg,#8d6e4c,#a68966);
+    --border:#d4c4a8;--border-light:#c8b898;--border-focus:#8d6e4c;
+    --text:#4a3728;--text-muted:#7a6652;--text-dim:#9a8672;
+    --accent:#8d6e4c;--accent-hover:#a6845e;
+    --tag-bg:#faf3e8;--tag-border:#d4c4a8;--tag-hover:#f0e4d0;
+    --selected-tag-bg:#e8dcc8;--selected-tag-border:#c8b898;
+    --cat-big-color:#8d6e4c;--cat-active-bg:#f0e4d0;
+    --sub-heading-border:#d4c4a8;
+    --toast-bg:#8d6e4c;
+    --scrollbar:#c8b898;
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Segoe UI','Hiragino Sans',sans-serif;background:var(--bg-main);color:var(--text);min-height:100vh;transition:background .3s,color .3s;}
+
+  .header{background:var(--bg-header);padding:12px 24px;border-bottom:2px solid var(--border);position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+  .header-left h1{font-size:1.2rem;color:#fff;margin-bottom:2px;}
+  .header-left p{font-size:.72rem;color:rgba(255,255,255,.7);}
+  .header-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+
+  .theme-btn{padding:4px 10px;border-radius:12px;border:2px solid rgba(255,255,255,.3);background:transparent;color:#fff;font-size:.7rem;cursor:pointer;transition:.2s;white-space:nowrap;}
+  .theme-btn:hover,.theme-btn.active{background:rgba(255,255,255,.2);border-color:#fff;}
+  .search-wrap{position:relative;}
+  .search-input{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);border-radius:16px;padding:5px 12px 5px 30px;color:#fff;font-size:.78rem;width:180px;outline:none;}
+  .search-input::placeholder{color:rgba(255,255,255,.5);}
+  .search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:.75rem;pointer-events:none;}
+  .search-results{position:absolute;top:100%;left:0;right:0;background:var(--bg-card);border:1px solid var(--border-light);border-radius:8px;max-height:300px;overflow-y:auto;z-index:200;display:none;margin-top:4px;}
+  .search-results.show{display:block;}
+  .search-result-item{padding:8px 12px;cursor:pointer;font-size:.78rem;border-bottom:1px solid var(--border);transition:.15s;}
+  .search-result-item:hover{background:var(--tag-hover);}
+  .search-result-item .sr-prompt{color:var(--accent);font-weight:600;}
+  .search-result-item .sr-ja{color:var(--text-muted);margin-left:6px;}
+  .search-result-item .sr-cat{color:var(--text-dim);font-size:.68rem;margin-left:6px;}
+
+  .input-area{background:var(--bg-input);border-bottom:2px solid var(--border);padding:14px 24px;position:sticky;top:52px;z-index:99;transition:background .3s;}
+  .input-label-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+  .input-label-row label{font-size:.82rem;color:var(--text-muted);}
+  .token-counter{font-size:.75rem;padding:3px 10px;border-radius:10px;background:var(--bg-card);border:1px solid var(--border-light);}
+  .token-counter.warn{color:#ff9800;border-color:#ff9800;}
+  .token-counter.danger{color:#f44336;border-color:#f44336;}
+  .prompt-box-wrap{display:flex;gap:8px;align-items:flex-start;}
+  .prompt-box{flex:1;min-height:60px;max-height:160px;background:var(--bg-card);border:1px solid var(--border-light);border-radius:8px;padding:10px 14px;color:var(--text);font-size:.85rem;line-height:1.6;resize:vertical;outline:none;overflow-y:auto;word-break:break-all;transition:background .3s,border .3s;}
+  .prompt-box:focus{border-color:var(--border-focus);}
+  .btn-group{display:flex;flex-direction:column;gap:5px;}
+  .btn{padding:7px 12px;border:none;border-radius:6px;cursor:pointer;font-size:.72rem;font-weight:600;transition:.2s;white-space:nowrap;}
+  .btn-copy{background:var(--accent);color:#fff;}
+  .btn-copy:hover{background:var(--accent-hover);}
+  .btn-clear{background:var(--border-light);color:var(--text);}
+  .btn-clear:hover{background:var(--text-dim);}
+  .btn-preset{background:#2196F3;color:#fff;font-size:.68rem;}
+  .btn-preset:hover{background:#42a5f5;}
+  .btn-history{background:#ff9800;color:#fff;font-size:.68rem;}
+  .btn-history:hover{background:#ffb74d;}
+
+  .selected-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;min-height:20px;}
+  .selected-tag{display:inline-flex;align-items:center;gap:3px;background:var(--selected-tag-bg);border:1px solid var(--selected-tag-border);border-radius:12px;padding:2px 8px;font-size:.72rem;color:var(--text);cursor:grab;animation:fadeIn .2s;user-select:none;transition:background .3s;}
+  .selected-tag.dragging{opacity:.4;}
+  .selected-tag .remove{cursor:pointer;color:var(--accent);font-weight:bold;font-size:.85rem;margin-left:2px;line-height:1;}
+  .selected-tag .remove:hover{color:var(--accent-hover);}
+  @keyframes fadeIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+
+  .main{display:flex;height:calc(100vh - 210px);}
+
+  .sidebar{width:220px;min-width:220px;background:var(--bg-sidebar);border-right:1px solid var(--border);overflow-y:auto;padding:8px 0;transition:background .3s;}
+  .sidebar::-webkit-scrollbar{width:4px;}
+  .sidebar::-webkit-scrollbar-thumb{background:var(--scrollbar);border-radius:4px;}
+  .cat-big{padding:6px 16px;font-size:.7rem;color:var(--cat-big-color);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-top:8px;}
+  .cat-item{padding:7px 16px 7px 24px;font-size:.78rem;cursor:pointer;color:var(--text-muted);border-left:3px solid transparent;transition:.15s;}
+  .cat-item:hover{background:var(--cat-active-bg);color:var(--text);}
+  .cat-item.active{background:var(--cat-active-bg);color:var(--accent);border-left-color:var(--accent);}
+  .cat-item.custom-cat{font-style:italic;}
+
+  .content{flex:1;overflow-y:auto;padding:20px 24px;transition:background .3s;}
+  .content::-webkit-scrollbar{width:6px;}
+  .content::-webkit-scrollbar-thumb{background:var(--scrollbar);border-radius:4px;}
+  .content-title{font-size:1.05rem;font-weight:700;margin-bottom:14px;color:var(--text);}
+  .sub-heading{font-size:.82rem;font-weight:700;color:var(--accent);margin:16px 0 8px;padding-bottom:4px;border-bottom:1px solid var(--sub-heading-border);}
+  .sub-heading:first-of-type{margin-top:0;}
+  .tag-grid{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px;}
+  .tag-btn{padding:5px 12px;background:var(--tag-bg);border:1px solid var(--tag-border);border-radius:6px;color:var(--text-muted);font-size:.76rem;cursor:pointer;transition:.15s;user-select:none;}
+  .tag-btn:hover{background:var(--tag-hover);border-color:var(--border-light);color:var(--text);}
+  .tag-btn.selected{background:var(--accent);border-color:var(--accent);color:#fff;}
+  .tag-hint{font-size:.65rem;color:var(--text-dim);margin-left:3px;}
+  .tag-btn.selected .tag-hint{color:rgba(255,255,255,.7);}
+
+  .toast{position:fixed;bottom:24px;right:24px;background:var(--toast-bg);color:#fff;padding:10px 20px;border-radius:8px;font-size:.82rem;opacity:0;transform:translateY(10px);transition:.3s;pointer-events:none;z-index:999;}
+  .toast.show{opacity:1;transform:translateY(0);}
+
+  /* Modal */
+  .modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:300;display:none;align-items:center;justify-content:center;}
+  .modal-overlay.show{display:flex;}
+  .modal{background:var(--bg-card);border:1px solid var(--border-light);border-radius:12px;padding:24px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto;color:var(--text);}
+  .modal h2{font-size:1rem;margin-bottom:16px;color:var(--accent);}
+  .modal-close{float:right;cursor:pointer;font-size:1.2rem;color:var(--text-muted);background:none;border:none;}
+  .modal-close:hover{color:var(--accent);}
+  .modal label{font-size:.8rem;color:var(--text-muted);display:block;margin:10px 0 4px;}
+  .modal input,.modal textarea{width:100%;padding:8px 12px;background:var(--bg-main);border:1px solid var(--border-light);border-radius:6px;color:var(--text);font-size:.82rem;outline:none;}
+  .modal input:focus,.modal textarea:focus{border-color:var(--accent);}
+  .modal textarea{min-height:60px;resize:vertical;}
+  .modal-btn{margin-top:16px;padding:8px 20px;background:var(--accent);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:.82rem;}
+  .modal-btn:hover{background:var(--accent-hover);}
+
+  .history-item{padding:10px;background:var(--bg-main);border:1px solid var(--border-light);border-radius:6px;margin-bottom:8px;cursor:pointer;font-size:.78rem;word-break:break-all;transition:.15s;}
+  .history-item:hover{border-color:var(--accent);}
+  .history-item .hi-date{font-size:.68rem;color:var(--text-dim);margin-bottom:4px;}
+  .history-item .hi-del{float:right;color:var(--accent);cursor:pointer;font-size:.75rem;}
+
+  .preset-item{padding:8px 12px;background:var(--bg-main);border:1px solid var(--border-light);border-radius:6px;margin-bottom:6px;cursor:pointer;transition:.15s;}
+  .preset-item:hover{border-color:var(--accent);}
+  .preset-item .pi-name{font-weight:600;font-size:.8rem;color:var(--accent);}
+  .preset-item .pi-prompt{font-size:.72rem;color:var(--text-muted);margin-top:2px;word-break:break-all;}
+
+  @media(max-width:768px){
+    .header{flex-direction:column;align-items:flex-start;}
+    .header-right{width:100%;justify-content:flex-start;}
+    .search-input{width:140px;}
+    .main{height:auto;flex-direction:column;}
+    .sidebar{width:100%;min-width:100%;max-height:180px;display:flex;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;padding:0;}
+    .cat-big{white-space:nowrap;padding:8px 10px;margin:0;}
+    .cat-item{white-space:nowrap;border-left:none;border-bottom:3px solid transparent;padding:8px 10px;}
+    .cat-item.active{border-bottom-color:var(--accent);border-left-color:transparent;}
+    .content{padding:14px;}
+    .input-area{top:auto;position:relative;}
+  }
+</style>
+</head>
+<body data-theme="dark">
+
+<div class="header">
+  <div class="header-left">
+    <h1>🎨 SD Prompt Builder Pro</h1>
+    <p>タグをクリック → 自動追加 → コピーしてSDへ</p>
+  </div>
+  <div class="header-right">
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input class="search-input" id="searchInput" placeholder="検索（英語/日本語）" autocomplete="off">
+      <div class="search-results" id="searchResults"></div>
+    </div>
+    <button class="theme-btn active" data-theme="dark">🌑 ダーク</button>
+    <button class="theme-btn" data-theme="midnight-blue">🌊 ブルー</button>
+    <button class="theme-btn" data-theme="dark-purple">🔮 パープル</button>
+    <button class="theme-btn" data-theme="light">☀️ ライト</button>
+    <button class="theme-btn" data-theme="sepia">📜 セピア</button>
+  </div>
+</div>
+
+<div class="input-area">
+  <div class="input-label-row">
+    <label>📝 プロンプト入力欄</label>
+    <span class="token-counter" id="tokenCounter">トークン: 0 / 75</span>
+  </div>
+  <div class="prompt-box-wrap">
+    <div class="prompt-box" id="promptBox"></div>
+    <div class="btn-group">
+      <button class="btn btn-copy" onclick="copyPrompt()">📋 コピー</button>
+      <button class="btn btn-clear" onclick="clearAll()">🗑 全消去</button>
+      <button class="btn btn-preset" onclick="openPresetModal()">⭐ プリセット</button>
+      <button class="btn btn-history" onclick="openHistoryModal()">📂 履歴</button>
+    </div>
+  </div>
+  <div class="selected-tags" id="selectedTags"></div>
+</div>
+
+<div class="main">
+  <div class="sidebar" id="sidebar"></div>
+  <div class="content" id="content"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Preset Modal -->
+<div class="modal-overlay" id="presetModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('presetModal')">&times;</button>
+    <h2>⭐ プリセット</h2>
+    <div id="presetList"></div>
+  </div>
+</div>
+
+<!-- History Modal -->
+<div class="modal-overlay" id="historyModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('historyModal')">&times;</button>
+    <h2>📂 コピー履歴</h2>
+    <div id="historyList"></div>
+  </div>
+</div>
+
+<!-- Custom Tag Modal -->
+<div class="modal-overlay" id="customModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('customModal')">&times;</button>
+    <h2>➕ カスタムプロンプト追加</h2>
+    <label>英語プロンプト</label>
+    <input id="customPromptEn" placeholder="例: galaxy print dress">
+    <label>日本語メモ（任意）</label>
+    <input id="customPromptJa" placeholder="例: 銀河柄ドレス">
+    <label>サブカテゴリ名（任意・新規入力可）</label>
+    <input id="customSubCat" placeholder="例: オリジナル">
+    <button class="modal-btn" onclick="addCustomPrompt()">追加する</button>
+  </div>
+</div>
+
+<script>
+// ============================================================
+//  DATA
+// ============================================================
+const DATA = {
+  "_bigcat_clothing": "👗 服装・ファッション",
+
+  "👕 トップス": {
+    "👕 シャツ系": [
+      {p:"shirt",j:"シャツ"},{p:"t-shirt",j:"Tシャツ"},{p:"white t-shirt",j:"白Tシャツ"},{p:"black t-shirt",j:"黒Tシャツ"},{p:"graphic t-shirt",j:"プリントTシャツ"},{p:"long-sleeved t-shirt",j:"長袖Tシャツ"},{p:"oversized t-shirt",j:"オーバーサイズTシャツ"},{p:"dress shirt",j:"ワイシャツ"},{p:"button-down shirt",j:"ボタンダウンシャツ"},{p:"collared shirt",j:"襟付きシャツ"},{p:"polo shirt",j:"ポロシャツ"},{p:"flannel shirt",j:"フランネルシャツ"},{p:"denim shirt",j:"デニムシャツ"},{p:"hawaiian shirt",j:"アロハシャツ"},{p:"henley shirt",j:"ヘンリーシャツ"},{p:"plaid shirt",j:"チェック柄シャツ"},{p:"striped shirt",j:"ストライプシャツ"},{p:"vertical-striped shirt",j:"縦ストライプシャツ"},{p:"print shirt",j:"プリントシャツ"},{p:"frilled shirt",j:"フリル付きシャツ"},{p:"see-through shirt",j:"シースルーシャツ"},{p:"open shirt",j:"前が開いたシャツ"},{p:"unbuttoned shirt",j:"ボタンを外したシャツ"},{p:"cropped shirt",j:"丈の短いシャツ"},{p:"tied shirt",j:"裾を結んだシャツ"},{p:"gym shirt",j:"体操着シャツ"},{p:"sailor shirt",j:"セーラーシャツ"}
+    ],
+    "👚 ブラウス・トップス": [
+      {p:"blouse",j:"ブラウス"},{p:"chiffon blouse",j:"シフォンブラウス"},{p:"smock blouse",j:"スモックブラウス"},{p:"tunic blouse",j:"チュニックブラウス"},{p:"crop top",j:"クロップトップ"},{p:"tank top",j:"タンクトップ"},{p:"tube top",j:"チューブトップ"},{p:"bandeau top",j:"バンドゥトップ"},{p:"bra top",j:"ブラトップ"},{p:"halter top",j:"ホルタートップ"},{p:"halterneck",j:"ホルターネック"},{p:"camisole",j:"キャミソール"},{p:"strapless",j:"ストラップレス"},{p:"bustier",j:"ビスチェ"},{p:"corset top",j:"コルセットトップ"},{p:"off-shoulder top",j:"オフショルダートップ"},{p:"one-shoulder top",j:"ワンショルダートップ"},{p:"cold shoulder top",j:"コールドショルダートップ"},{p:"front-tie top",j:"胸元で結ぶトップス"},{p:"lace tops",j:"レーストップス"},{p:"mock neck top",j:"モックネックトップ"},{p:"drop shoulder tee",j:"ドロップショルダーT"}
+    ],
+    "🧶 セーター・ニット系": [
+      {p:"sweater",j:"セーター"},{p:"knit",j:"ニット"},{p:"turtleneck sweater",j:"タートルネックセーター"},{p:"v-neck sweater",j:"Vネックセーター"},{p:"off-shoulder sweater",j:"オフショルダーセーター"},{p:"ribbed sweater",j:"リブセーター"},{p:"oversized sweater",j:"オーバーサイズセーター"},{p:"cropped sweater",j:"クロップドセーター"},{p:"sleeveless sweater",j:"ノースリーブセーター"},{p:"sweater vest",j:"セーターベスト"},{p:"virgin killer sweater",j:"背中が大きく開いたセーター"},{p:"aran sweater",j:"アランセーター"},{p:"argyle sweater",j:"アーガイルセーター"},{p:"sweater dress",j:"セーターワンピース"},{p:"pullover",j:"プルオーバー"},{p:"cropped knit",j:"クロップドニット"}
+    ]
+  },
+
+  "🧥 アウター": {
+    "🧥 ジャケット": [
+      {p:"jacket",j:"ジャケット"},{p:"leather jacket",j:"レザージャケット"},{p:"denim jacket",j:"デニムジャケット"},{p:"bomber jacket",j:"ボンバージャケット"},{p:"flight jacket",j:"フライトジャケット"},{p:"military jacket",j:"ミリタリージャケット"},{p:"track jacket",j:"トラックジャケット"},{p:"cropped jacket",j:"丈の短いジャケット"},{p:"collared jacket",j:"襟付きジャケット"},{p:"field jacket",j:"フィールドジャケット"},{p:"fleece jacket",j:"フリースジャケット"},{p:"quilted jacket",j:"キルティングジャケット"},{p:"puffer jacket",j:"パファージャケット"},{p:"shearling jacket",j:"ムートンジャケット"},{p:"tweed jacket",j:"ツイードジャケット"},{p:"suit jacket",j:"スーツジャケット"},{p:"tailored jacket",j:"テーラードジャケット"},{p:"sleeveless jacket",j:"袖なしジャケット"},{p:"open jacket",j:"前が開いたジャケット"},{p:"letterman jacket",j:"レターマンジャケット"},{p:"performance jacket",j:"パフォーマンスジャケット"}
+    ],
+    "🧥 コート": [
+      {p:"coat",j:"コート"},{p:"trench coat",j:"トレンチコート"},{p:"pea coat",j:"ピーコート"},{p:"duffle coat",j:"ダッフルコート"},{p:"overcoat",j:"オーバーコート"},{p:"long coat",j:"膝下ロングコート"},{p:"fur coat",j:"ファーコート"},{p:"winter coat",j:"冬用コート"},{p:"wool coat",j:"ウールコート"},{p:"camel coat",j:"キャメルコート"},{p:"chesterfield coat",j:"チェスターフィールドコート"},{p:"lab coat",j:"白衣"},{p:"raincoat",j:"レインコート"},{p:"windbreaker",j:"ウインドブレーカー"}
+    ],
+    "🧣 その他のアウター": [
+      {p:"blazer",j:"ブレザー"},{p:"vest",j:"ベスト"},{p:"down vest",j:"ダウンベスト"},{p:"cardigan",j:"カーディガン"},{p:"open cardigan",j:"前が開いたカーディガン"},{p:"hoodie",j:"フード付きパーカー"},{p:"cropped hoodie",j:"クロップドパーカー"},{p:"blouson",j:"ブルゾン"},{p:"poncho",j:"ポンチョ"},{p:"cape",j:"ケープ"},{p:"cloak",j:"クローク"},{p:"hooded cloak",j:"フード付きクローク"},{p:"capelet",j:"ケープレット"},{p:"robe",j:"ローブ"},{p:"bathrobe",j:"バスローブ"},{p:"shrug",j:"シュラグ"},{p:"waistcoat",j:"ウエストコート"},{p:"tailcoat",j:"テールコート（燕尾服）"}
+    ]
+  },
+
+  "👖 ボトムス": {
+    "👗 スカート": [
+      {p:"skirt",j:"スカート"},{p:"mini skirt",j:"ミニスカート"},{p:"long skirt",j:"ロングスカート"},{p:"maxi skirt",j:"マキシスカート"},{p:"midi skirt",j:"ミディスカート"},{p:"pleated skirt",j:"プリーツスカート"},{p:"A-line skirt",j:"Aラインスカート"},{p:"flare skirt",j:"フレアスカート"},{p:"pencil skirt",j:"ペンシルスカート"},{p:"tight skirt",j:"タイトスカート"},{p:"straight skirt",j:"ストレートスカート"},{p:"denim skirt",j:"デニムスカート"},{p:"leather skirt",j:"レザースカート"},{p:"tulle skirt",j:"チュールスカート"},{p:"tiered skirt",j:"ティアードスカート"},{p:"ruffled skirt",j:"ラッフルスカート"},{p:"frill skirt",j:"フリルスカート"},{p:"wrap skirt",j:"巻きスカート"},{p:"slit skirt",j:"スリットスカート"},{p:"high-waist skirt",j:"ハイウエストスカート"},{p:"suspender skirt",j:"サスペンダースカート"},{p:"skater skirt",j:"スケータースカート"},{p:"checked skirt",j:"チェックスカート"},{p:"suede skirt",j:"スエードスカート"},{p:"drape skirt",j:"ドレープスカート"},{p:"culottes",j:"キュロットスカート"}
+    ],
+    "👖 パンツ": [
+      {p:"pants",j:"パンツ"},{p:"jeans",j:"ジーンズ"},{p:"skinny jeans",j:"スキニージーンズ"},{p:"ripped jeans",j:"ダメージジーンズ"},{p:"slacks",j:"スラックス"},{p:"dress pants",j:"ドレスパンツ"},{p:"chino pants",j:"チノパン"},{p:"cargo pants",j:"カーゴパンツ"},{p:"wide-leg pants",j:"ワイドパンツ"},{p:"slim fit pants",j:"スリムフィットパンツ"},{p:"straight pants",j:"ストレートパンツ"},{p:"baggy pants",j:"バギーパンツ"},{p:"jogger pants",j:"ジョガーパンツ"},{p:"sweat pants",j:"スウェットパンツ"},{p:"track pants",j:"トラックパンツ"},{p:"leather pants",j:"レザーパンツ"},{p:"corduroy pants",j:"コーデュロイパンツ"},{p:"capri pants",j:"カプリパンツ"},{p:"cropped pants",j:"クロップドパンツ"},{p:"palazzo pants",j:"パラッツォパンツ"},{p:"Bell-bottom pants",j:"ベルボトムパンツ"},{p:"houndstooth pants",j:"千鳥格子パンツ"},{p:"pinstripe pants",j:"ピンストライプパンツ"},{p:"khaki pants",j:"カーキパンツ"},{p:"overalls",j:"オーバーオール"},{p:"leggings",j:"レギンス"},{p:"spats",j:"スパッツ"}
+    ],
+    "🩳 ショートパンツ": [
+      {p:"shorts",j:"ショートパンツ"},{p:"denim shorts",j:"デニムショーツ"},{p:"cargo shorts",j:"カーゴショーツ"},{p:"bike shorts",j:"バイクショーツ"},{p:"cycling shorts",j:"サイクリングショーツ"},{p:"beach shorts",j:"ビーチショーツ"},{p:"micro shorts",j:"マイクロホットパンツ"},{p:"short shorts",j:"ショートホットパンツ"},{p:"daisy duke shorts",j:"デイジーデューク"},{p:"leather shorts",j:"レザーショーツ"},{p:"linen shorts",j:"リネンショーツ"},{p:"tailored shorts",j:"テーラードショーツ"},{p:"bloomers",j:"ブルマ"}
+    ]
+  },
+
+  "👗 ワンピース・ドレス": {
+    "👗 カジュアルドレス": [
+      {p:"dress",j:"ドレス"},{p:"casual dress",j:"カジュアルドレス"},{p:"sundress",j:"サンドレス"},{p:"sweater dress",j:"セーターワンピース"},{p:"shirt dress",j:"シャツワンピース"},{p:"mini dress",j:"ミニドレス"},{p:"short dress",j:"ショートドレス"},{p:"long dress",j:"ロングドレス"},{p:"maxi dress",j:"マキシドレス"},{p:"fit and flare dress",j:"フィット＆フレアドレス"},{p:"wrap dress",j:"ラップドレス"},{p:"layered dress",j:"重ね着風ワンピース"},{p:"pleated dress",j:"プリーツドレス"},{p:"sailor dress",j:"セーラードレス"},{p:"summer dress",j:"サマードレス"}
+    ],
+    "✨ フォーマル・パーティードレス": [
+      {p:"evening gown",j:"イブニングガウン"},{p:"ball gown",j:"ボールガウン"},{p:"party dress",j:"パーティードレス"},{p:"cocktail dress",j:"カクテルドレス"},{p:"wedding dress",j:"ウェディングドレス"},{p:"princess dress",j:"プリンセスドレス"},{p:"pageant dress",j:"ステージ用ドレス"},{p:"nightgown",j:"ナイトガウン"}
+    ],
+    "🎭 デザイン特徴別ドレス": [
+      {p:"backless dress",j:"背中が開いたドレス"},{p:"strapless dress",j:"チューブトップドレス"},{p:"off-shoulder dress",j:"オフショルダードレス"},{p:"one-shoulder dress",j:"ワンショルダードレス"},{p:"halter dress",j:"ホルターネックドレス"},{p:"high slit dress",j:"スリット入りドレス"},{p:"see-through dress",j:"シースルードレス"},{p:"lace-trimmed dress",j:"レーストリムドレス"},{p:"frilled dress",j:"フリルドレス"},{p:"ruffle dress",j:"ラッフルドレス"},{p:"sleeveless dress",j:"袖なしドレス"},{p:"v neck dress",j:"Vネックドレス"},{p:"collared dress",j:"襟付きドレス"},{p:"striped dress",j:"縞模様のドレス"},{p:"plaid dress",j:"チェック柄ドレス"},{p:"multicolored dress",j:"マルチカラードレス"},{p:"two-tone dress",j:"2色使いのドレス"},{p:"ribbed dress",j:"リブ編みドレス"}
+    ]
+  },
+
+  "🎽 制服・コスチューム": {
+    "🏫 学校制服": [
+      {p:"school uniform",j:"学校の制服"},{p:"sailor suit",j:"セーラー服"},{p:"seifuku",j:"制服（日本語タグ）"},{p:"JK",j:"女子高生制服"},{p:"gym uniform",j:"体操服"},{p:"blazer uniform",j:"ブレザー制服"}
+    ],
+    "👩‍⚕️ 職業制服": [
+      {p:"nurse outfit",j:"ナース服"},{p:"maid outfit",j:"メイド服"},{p:"waitress",j:"ウエイトレス服"},{p:"flight attendant",j:"CA服"},{p:"police uniform",j:"警察の制服"},{p:"military uniform",j:"軍服"},{p:"chef uniform",j:"シェフ服"},{p:"suit",j:"スーツ"},{p:"business suit",j:"ビジネススーツ"},{p:"formal clothes",j:"フォーマル"}
+    ],
+    "🎭 コスプレ・コスチューム": [
+      {p:"cheerleader",j:"チアリーダー"},{p:"bunny girl",j:"バニーガール"},{p:"leotard",j:"レオタード"},{p:"bodysuit",j:"ボディスーツ"},{p:"kigurumi",j:"着ぐるみ"},{p:"apron",j:"エプロン"},{p:"pajamas",j:"パジャマ"},{p:"jumpsuit",j:"ジャンプスーツ"},{p:"overalls",j:"オーバーオール"},{p:"sarong",j:"サロン（巻き布）"}
+    ],
+    "⚔ ファンタジー・アーマー": [
+      {p:"armor",j:"鎧・アーマー"},{p:"leather armor",j:"レザーアーマー"},{p:"chainmail",j:"チェインメイル"},{p:"plate armor",j:"プレートアーマー"},{p:"Japanese armor",j:"日本の甲冑"},{p:"magic robe",j:"魔法のローブ"},{p:"cape",j:"ケープ"},{p:"superhero costume",j:"スーパーヒーロー衣装"},{p:"princess costume",j:"プリンセス衣装"},{p:"angel costume",j:"天使衣装"},{p:"devil costume",j:"悪魔衣装"},{p:"vampire costume",j:"吸血鬼衣装"},{p:"medieval costume",j:"中世風衣装"},{p:"steampunk costume",j:"スチームパンク衣装"},{p:"pirate costume",j:"海賊衣装"}
+    ]
+  },
+
+  "👙 水着・下着": {
+    "🏖 水着": [
+      {p:"bikini",j:"ビキニ"},{p:"one-piece swimsuit",j:"ワンピース水着"},{p:"school swimsuit",j:"スクール水着"},{p:"competition swimsuit",j:"競泳水着"},{p:"bandeau bikini",j:"バンドゥビキニ"},{p:"highleg swimsuit",j:"ハイレグ水着"},{p:"string bikini",j:"紐ビキニ"},{p:"tankini",j:"タンキニ"},{p:"swimwear",j:"水着全般"}
+    ],
+    "🩱 下着・インナー": [
+      {p:"underwear",j:"下着"},{p:"bra",j:"ブラジャー"},{p:"panties",j:"パンティー"},{p:"lingerie",j:"ランジェリー"},{p:"sexy lingerie",j:"セクシーランジェリー"},{p:"thong",j:"Tバック"},{p:"undershirt",j:"アンダーシャツ"},{p:"slip",j:"スリップ"},{p:"corset",j:"コルセット"},{p:"garter belt",j:"ガーターベルト"},{p:"babydoll",j:"ベビードール"},{p:"nightgown",j:"ネグリジェ"}
+    ]
+  },
+
+  "🧦 靴下・靴": {
+    "🧦 靴下・ストッキング": [
+      {p:"socks",j:"靴下"},{p:"knee-high socks",j:"ニーハイソックス"},{p:"thigh-high socks",j:"サイハイソックス"},{p:"ankle socks",j:"アンクルソックス"},{p:"crew socks",j:"クルーソックス"},{p:"boot socks",j:"ブーツソックス"},{p:"loose socks",j:"ルーズソックス"},{p:"stockings",j:"ストッキング"},{p:"black stockings",j:"黒ストッキング"},{p:"white stockings",j:"白ストッキング"},{p:"pantyhose",j:"パンティストッキング"},{p:"black pantyhose",j:"黒パンスト"},{p:"fishnet stockings",j:"網タイツ"},{p:"striped stockings",j:"ストライプストッキング"},{p:"lace stockings",j:"レースストッキング"},{p:"tights",j:"タイツ"},{p:"leg warmers",j:"レッグウォーマー"}
+    ],
+    "👟 靴": [
+      {p:"shoes",j:"靴"},{p:"sneakers",j:"スニーカー"},{p:"high heels",j:"ハイヒール"},{p:"stiletto heels",j:"ピンヒール"},{p:"pumps",j:"パンプス"},{p:"boots",j:"ブーツ"},{p:"ankle boots",j:"アンクルブーツ"},{p:"knee-high boots",j:"ニーハイブーツ"},{p:"thigh-high boots",j:"サイハイブーツ"},{p:"combat boots",j:"コンバットブーツ"},{p:"cowboy boots",j:"カウボーイブーツ"},{p:"rain boots",j:"レインブーツ"},{p:"platform boots",j:"厚底ブーツ"},{p:"ugg boots",j:"ムートンブーツ"},{p:"sandals",j:"サンダル"},{p:"flip flops",j:"ビーチサンダル"},{p:"loafers",j:"ローファー"},{p:"mary janes",j:"メリージェーン"},{p:"ballet flats",j:"バレエシューズ"},{p:"slippers",j:"スリッパ"},{p:"barefoot",j:"裸足"}
+    ]
+  },
+
+  "💍 アクセサリー": {
+    "💎 ジュエリー": [
+      {p:"necklace",j:"ネックレス"},{p:"choker",j:"チョーカー"},{p:"pendant",j:"ペンダント"},{p:"earrings",j:"イヤリング"},{p:"piercing",j:"ピアス"},{p:"bracelet",j:"ブレスレット"},{p:"bangle",j:"バングル"},{p:"ring",j:"指輪"},{p:"anklet",j:"アンクレット"},{p:"brooch",j:"ブローチ"},{p:"tiara",j:"ティアラ"},{p:"crown",j:"王冠"}
+    ],
+    "👔 ネクタイ・スカーフ等": [
+      {p:"necktie",j:"ネクタイ"},{p:"bow tie",j:"蝶ネクタイ"},{p:"ribbon",j:"リボン"},{p:"scarf",j:"スカーフ"},{p:"muffler",j:"マフラー"},{p:"belt",j:"ベルト"},{p:"suspenders",j:"サスペンダー"}
+    ],
+    "👓 アイウェア": [
+      {p:"glasses",j:"眼鏡"},{p:"sunglasses",j:"サングラス"},{p:"round glasses",j:"丸眼鏡"},{p:"blindfold",j:"目隠し"},{p:"monocle",j:"片眼鏡"},{p:"goggles",j:"ゴーグル"}
+    ],
+    "🧤 手袋・その他": [
+      {p:"gloves",j:"手袋"},{p:"fingerless gloves",j:"指なし手袋"},{p:"long gloves",j:"ロング手袋"},{p:"mittens",j:"ミトン"},{p:"wrist cuffs",j:"リストカフ"},{p:"armband",j:"アームバンド"},{p:"watch",j:"腕時計"},{p:"bag",j:"バッグ"},{p:"handbag",j:"ハンドバッグ"},{p:"backpack",j:"リュックサック"},{p:"shoulder bag",j:"ショルダーバッグ"},{p:"mask",j:"マスク"},{p:"mouth mask",j:"マウスマスク"},{p:"wearing headphones",j:"ヘッドフォン着用"},{p:"with a microphone",j:"マイク付き"},{p:"umbrella",j:"傘"},{p:"fan",j:"扇子"}
+    ]
+  },
+
+  "👒 帽子・ヘッドウェア": {
+    "🎩 帽子": [
+      {p:"hat",j:"帽子"},{p:"cap",j:"キャップ"},{p:"beret",j:"ベレー帽"},{p:"straw hat",j:"麦わら帽子"},{p:"top hat",j:"シルクハット"},{p:"fedora",j:"フェドラ帽"},{p:"sun hat",j:"サンハット"},{p:"bucket hat",j:"バケットハット"},{p:"witch hat",j:"魔女帽子"},{p:"santa hat",j:"サンタ帽子"},{p:"beanie",j:"ニット帽"},{p:"cowboy hat",j:"カウボーイハット"},{p:"visor",j:"サンバイザー"},{p:"hood",j:"フード"},{p:"animal hood",j:"アニマルフード"},{p:"nurse cap",j:"ナースキャップ"}
+    ],
+    "👑 装飾的ヘッドウェア": [
+      {p:"crown",j:"王冠"},{p:"tiara",j:"ティアラ"},{p:"helmet",j:"ヘルメット"},{p:"hair ribbon",j:"ヘアリボン"},{p:"hair ornament",j:"髪飾り"},{p:"hairband",j:"ヘアバンド"},{p:"headband",j:"ヘッドバンド"},{p:"flower crown",j:"花冠"},{p:"hair clip",j:"ヘアクリップ"},{p:"hairpin",j:"ヘアピン"},{p:"veil",j:"ベール"},{p:"cat ears",j:"猫耳"},{p:"rabbit ears",j:"うさぎ耳"},{p:"horns",j:"角"},{p:"halo",j:"天使の輪"}
+    ]
+  },
+
+  "👘 和服・民族衣装": {
+    "👘 日本の伝統衣装": [
+      {p:"kimono",j:"着物"},{p:"yukata",j:"浴衣"},{p:"furisode",j:"振袖"},{p:"hakama",j:"袴"},{p:"japanese clothes",j:"和服（汎用）"},{p:"shrine maiden outfit",j:"巫女服"},{p:"sarashi",j:"さらし"},{p:"fundoshi",j:"ふんどし"}
+    ],
+    "🌏 その他の民族衣装": [
+      {p:"china dress",j:"チャイナドレス"},{p:"hanfu",j:"漢服"},{p:"hanbok",j:"韓服"},{p:"ao dai",j:"アオザイ"},{p:"sari",j:"サリー"},{p:"dirndl",j:"ディアンドル"},{p:"toga",j:"トーガ"},{p:"kilt",j:"キルト"}
+    ]
+  },
+
+  "🎀 ファッションスタイル": {
+    "🎀 ロリータ系": [
+      {p:"lolita fashion",j:"ロリータファッション"},{p:"gothic lolita",j:"ゴシックロリータ"},{p:"sweet lolita",j:"スウィートロリータ"},{p:"classic lolita",j:"クラシカルロリータ"},{p:"qi lolita",j:"チャイナロリータ"},{p:"wa lolita",j:"和ロリータ"}
+    ],
+    "🖤 ゴシック・パンク系": [
+      {p:"goth fashion",j:"ゴシックファッション"},{p:"punk",j:"パンクファッション"},{p:"emo fashion",j:"エモファッション"},{p:"grunge",j:"グランジ"},{p:"visual kei",j:"ヴィジュアル系"}
+    ],
+    "🌟 サブカル・個性派系": [
+      {p:"jirai kei",j:"地雷系"},{p:"yami kawaii",j:"病みかわいい"},{p:"yume kawaii",j:"夢かわいい"},{p:"decora",j:"デコラ"},{p:"fairy kei",j:"フェアリーケイ"},{p:"menhera",j:"メンヘラファッション"}
+    ],
+    "🏙 カジュアル・ストリート系": [
+      {p:"casual",j:"カジュアル"},{p:"streetwear",j:"ストリートウェア"},{p:"hip hop",j:"ヒップホップ"},{p:"sportswear",j:"スポーツウェア"},{p:"athleisure",j:"アスレジャー"},{p:"preppy",j:"プレッピー"},{p:"bohemian",j:"ボヘミアン"}
+    ],
+    "✨ その他のスタイル": [
+      {p:"formal clothes",j:"フォーマル"},{p:"aristocratic clothes",j:"貴族風ファッション"},{p:"victorian",j:"ヴィクトリアン"},{p:"y2k fashion",j:"Y2K"},{p:"heisei retro",j:"平成レトロ"},{p:"bodycon",j:"ボディコンシャス"},{p:"cyber fashion",j:"サイバーファッション"},{p:"cybergoth",j:"サイバーゴス"},{p:"techwear",j:"テックウェア"},{p:"steampunk",j:"スチームパンク"},{p:"western",j:"ウエスタン"},{p:"military fashion",j:"ミリタリーファッション"},{p:"minimalist fashion",j:"ミニマリスト"},{p:"vintage",j:"ヴィンテージ"}
+    ]
+  },
+
+  "👔 袖・襟・ネックライン": {
+    "💪 袖の長さ・形状": [
+      {p:"sleeveless",j:"ノースリーブ"},{p:"short sleeves",j:"半袖"},{p:"long sleeves",j:"長袖"},{p:"cap-sleeved",j:"キャップスリーブ"},{p:"elbow sleeve",j:"七分袖"},{p:"puffy sleeves",j:"パフスリーブ"},{p:"puffy short sleeves",j:"パフ半袖"},{p:"puffy long sleeves",j:"パフ長袖"},{p:"bell sleeve",j:"ベルスリーブ"},{p:"juliet sleeves",j:"ジュリエットスリーブ"},{p:"raglan sleeves",j:"ラグランスリーブ"},{p:"detached sleeves",j:"デタッチドスリーブ"},{p:"wide sleeves",j:"ワイドスリーブ"},{p:"frilled sleeves",j:"フリルスリーブ"},{p:"see-through sleeves",j:"シースルースリーブ"},{p:"fur-trimmed sleeves",j:"ファートリムスリーブ"},{p:"sleeves rolled up",j:"袖をまくった"},{p:"sleeves past wrists",j:"萌え袖"},{p:"single sleeve",j:"片袖"},{p:"asymmetrical sleeves",j:"アシンメトリー袖"}
+    ],
+    "👔 襟の種類": [
+      {p:"collar",j:"襟"},{p:"sailor collar",j:"セーラーカラー"},{p:"high collar",j:"ハイカラー"},{p:"wing collar",j:"ウイングカラー"},{p:"detached collar",j:"付け襟"},{p:"frilled collar",j:"フリル襟"},{p:"fur collar",j:"ファー襟"},{p:"popped collar",j:"立てた襟"},{p:"open collar",j:"開いた襟"}
+    ],
+    "👕 ネックライン": [
+      {p:"v-neck",j:"Vネック"},{p:"round neck",j:"ラウンドネック"},{p:"turtleneck",j:"タートルネック"},{p:"mock neck",j:"モックネック"},{p:"boat neck",j:"ボートネック"},{p:"halter neck",j:"ホルターネック"},{p:"off shoulder",j:"オフショルダー"},{p:"one-shoulder",j:"ワンショルダー"},{p:"bare shoulders",j:"肩出し"},{p:"strapless",j:"ストラップレス"},{p:"scoop neck",j:"スクープネック"},{p:"square neck",j:"スクエアネック"},{p:"keyhole neck",j:"キーホールネック"},{p:"cowl neck",j:"カウルネック"},{p:"sweetheart neckline",j:"スウィートハートネック"}
+    ]
+  },
+
+  "🧵 素材・柄・状態": {
+    "🧵 素材・テクスチャ": [
+      {p:"silk",j:"シルク"},{p:"satin",j:"サテン"},{p:"velvet",j:"ベルベット"},{p:"lace",j:"レース"},{p:"leather",j:"レザー"},{p:"denim",j:"デニム"},{p:"cotton",j:"コットン"},{p:"linen",j:"リネン"},{p:"wool",j:"ウール"},{p:"chiffon",j:"シフォン"},{p:"tulle",j:"チュール"},{p:"fur",j:"ファー"},{p:"faux fur",j:"フェイクファー"},{p:"mesh",j:"メッシュ"},{p:"sequin",j:"スパンコール"},{p:"suede",j:"スエード"},{p:"corduroy",j:"コーデュロイ"},{p:"tweed",j:"ツイード"},{p:"knit",j:"ニット"},{p:"organza",j:"オーガンザ"},{p:"PVC / vinyl",j:"PVC・ビニール"},{p:"latex",j:"ラテックス"},{p:"sheer",j:"シアー（透け素材）"}
+    ],
+    "🎨 柄・パターン": [
+      {p:"plaid",j:"チェック柄"},{p:"striped",j:"ストライプ"},{p:"polka dot",j:"水玉模様"},{p:"floral",j:"花柄"},{p:"paisley",j:"ペイズリー"},{p:"houndstooth",j:"千鳥格子"},{p:"argyle",j:"アーガイル柄"},{p:"gingham",j:"ギンガムチェック"},{p:"camouflage",j:"迷彩柄"},{p:"animal print",j:"アニマル柄"},{p:"leopard print",j:"ヒョウ柄"},{p:"pinstripe",j:"ピンストライプ"},{p:"two-tone",j:"ツートン"},{p:"multicolored",j:"マルチカラー"},{p:"gradient",j:"グラデーション"},{p:"print",j:"プリント柄"},{p:"embroidered",j:"刺繍入り"}
+    ],
+    "🔧 服の状態・修飾": [
+      {p:"wet clothes",j:"濡れた服"},{p:"torn clothes",j:"破れた服"},{p:"undone clothing",j:"だらしない着こなし"},{p:"oversized",j:"オーバーサイズ"},{p:"fitted",j:"フィットした"},{p:"loose",j:"ゆったりした"},{p:"cropped",j:"丈が短い"},{p:"layered",j:"重ね着"},{p:"patterned",j:"柄物の"},{p:"transparent",j:"透明な"},{p:"see-through",j:"シースルー"},{p:"frilled",j:"フリル付き"},{p:"fur-trimmed",j:"ファートリム"},{p:"lace-trimmed",j:"レーストリム"},{p:"ribbon-trimmed",j:"リボントリム"},{p:"open front",j:"前開き"},{p:"unbuttoned",j:"ボタン開け"},{p:"shirt tucked in",j:"シャツイン"},{p:"untucked",j:"シャツ出し"}
+    ]
+  },
+
+  // ---- 大カテゴリ: 🧑 人物・キャラクター ----
+  "_bigcat_character": "🧑 人物・キャラクター",
+
+  "🧑 人物基本": {
+    "👫 性別・人数": [
+      {p:"1girl",j:"女性1人"},{p:"2girls",j:"女性2人"},{p:"3girls",j:"女性3人"},{p:"multiple girls",j:"複数の女性"},{p:"1boy",j:"男性1人"},{p:"2boys",j:"男性2人"},{p:"multiple boys",j:"複数の男性"},{p:"1girl 1boy",j:"男女1人ずつ"},{p:"androgynous",j:"中性的"},{p:"solo",j:"一人だけ"},{p:"couple",j:"カップル"},{p:"group",j:"グループ"}
+    ],
+    "🎂 年齢・世代": [
+      {p:"child",j:"子供"},{p:"little girl",j:"幼い女の子"},{p:"little boy",j:"幼い男の子"},{p:"young",j:"若い"},{p:"teenage",j:"10代"},{p:"adult",j:"大人"},{p:"mature",j:"成熟した"},{p:"middle-aged",j:"中年"},{p:"elderly",j:"高齢の"},{p:"old man",j:"老人（男）"},{p:"old woman",j:"老人（女）"},{p:"baby face",j:"童顔"},{p:"youthful",j:"若々しい"}
+    ],
+    "🏋️ 体型": [
+      {p:"slim",j:"スリム"},{p:"slender",j:"ほっそりした"},{p:"petite",j:"小柄"},{p:"tall",j:"長身"},{p:"muscular",j:"筋肉質"},{p:"athletic",j:"アスリート体型"},{p:"curvy",j:"グラマー"},{p:"plump",j:"ぽっちゃり"},{p:"chubby",j:"ふくよかな"},{p:"skinny",j:"細い"},{p:"broad shoulders",j:"肩幅が広い"},{p:"narrow waist",j:"ウエストが細い"},{p:"long legs",j:"脚が長い"},{p:"short",j:"低身長"}
+    ],
+    "🎨 肌色・肌質": [
+      {p:"pale skin",j:"色白"},{p:"fair skin",j:"明るい肌"},{p:"light skin",j:"白い肌"},{p:"tan skin",j:"日焼け肌"},{p:"tanned",j:"褐色肌"},{p:"dark skin",j:"ダークスキン"},{p:"brown skin",j:"ブラウンスキン"},{p:"olive skin",j:"オリーブ肌"},{p:"smooth skin",j:"滑らかな肌"},{p:"glossy skin",j:"ツヤ肌"},{p:"freckles",j:"そばかす"},{p:"mole",j:"ほくろ"},{p:"scar",j:"傷跡"},{p:"tattoo",j:"タトゥー"},{p:"body paint",j:"ボディペイント"}
+    ],
+    "👀 目の色": [
+      {p:"blue eyes",j:"青い目"},{p:"red eyes",j:"赤い目"},{p:"green eyes",j:"緑の目"},{p:"brown eyes",j:"茶色い目"},{p:"black eyes",j:"黒い目"},{p:"purple eyes",j:"紫の目"},{p:"yellow eyes",j:"黄色い目"},{p:"golden eyes",j:"金の目"},{p:"pink eyes",j:"ピンクの目"},{p:"silver eyes",j:"銀の目"},{p:"orange eyes",j:"オレンジの目"},{p:"heterochromia",j:"オッドアイ"},{p:"gradient eyes",j:"グラデーションの目"},{p:"sparkling eyes",j:"キラキラした目"},{p:"bright eyes",j:"明るい目"},{p:"dull eyes",j:"くすんだ目"},{p:"glowing eyes",j:"光る目"}
+    ],
+    "👄 口・唇・メイク": [
+      {p:"lipstick",j:"リップ"},{p:"red lipstick",j:"赤リップ"},{p:"pink lipstick",j:"ピンクリップ"},{p:"glossy lips",j:"グロスリップ"},{p:"thick eyebrows",j:"太眉"},{p:"thin eyebrows",j:"細眉"},{p:"long eyelashes",j:"長いまつ毛"},{p:"makeup",j:"メイクアップ"},{p:"heavy makeup",j:"濃いメイク"},{p:"light makeup",j:"薄メイク"},{p:"no makeup",j:"ノーメイク"},{p:"eyeshadow",j:"アイシャドウ"},{p:"blush on cheeks",j:"チーク"},{p:"beauty mark",j:"つけぼくろ"}
+    ]
+  },
+
+  "😊 表情・顔": {
+    "😄 喜び・笑い系": [
+      {p:"smile",j:"笑顔"},{p:"light smile",j:"微笑み"},{p:"big laugh",j:"大笑い"},{p:"happy",j:"幸せそうな"},{p:"pleased",j:"喜んでいる"},{p:"great joy",j:"大喜び"},{p:"ecstasy",j:"恍惚とした表情"},{p:"seductive smile",j:"魅惑的な笑顔"},{p:"grin",j:"歯を見せて笑う"},{p:":d",j:"口を開けた笑顔"},{p:"beam",j:"にっこり笑う"},{p:"belly laugh",j:"お腹を抱えて笑う"},{p:"burst out laughing",j:"爆笑"},{p:"chuckle",j:"くすっと笑う"},{p:"cheerful",j:"陽気な"},{p:"peaceful",j:"平穏な"}
+    ],
+    "😡 怒り系": [
+      {p:"angry",j:"怒っている"},{p:"a little angry",j:"少し怒っている"},{p:"annoyed",j:"イライラ"},{p:"frown",j:"しかめっ面"},{p:"furious",j:"激怒"},{p:"irritated",j:"イライラ"},{p:"displeased",j:"不機嫌"},{p:"glaring",j:"睨む"},{p:"stern",j:"厳しい表情"},{p:"V-shaped eyebrows",j:"怒り眉"}
+    ],
+    "😢 悲しみ・泣き系": [
+      {p:"sad",j:"悲しい"},{p:"a little sad",j:"少し悲しい"},{p:"unhappy",j:"不幸な"},{p:"melancholy",j:"憂鬱"},{p:"crying",j:"泣く"},{p:"tearful",j:"泣きそう"},{p:"streaming tears",j:"涙が流れる"},{p:"wiping tears",j:"涙をぬぐう"},{p:"sobbing",j:"号泣"},{p:"sniffle",j:"泣きべそ"},{p:"sad smile",j:"悲しい笑顔"},{p:"despairing",j:"絶望的"},{p:"depressed",j:"落ち込む"},{p:"lamentation",j:"嘆き"}
+    ],
+    "😰 恐怖・不安系": [
+      {p:"scared",j:"おびえている"},{p:"terrified",j:"うろたえている"},{p:"afraid",j:"怯えている"},{p:"anxiety",j:"不安"},{p:"worried",j:"心配"},{p:"nervous",j:"緊張"},{p:"panicked",j:"パニック"},{p:"furrowed brow",j:"眉をしかめる"},{p:"troubled eyebrows",j:"困り眉"},{p:"guilt",j:"罪悪感"}
+    ],
+    "😲 驚き系": [
+      {p:"surprised",j:"驚いた"},{p:"amazed",j:"びっくり"},{p:"shocked",j:"ショック"},{p:"stunned",j:"あっけにとられる"},{p:"dumbfounded",j:"唖然"},{p:"startled",j:"飛び上がる"},{p:"gasped",j:"息を吞む"},{p:"wide-eyed",j:"目を見開く"}
+    ],
+    "😏 嫌悪・皮肉・その他": [
+      {p:"smug",j:"うぬぼれ"},{p:"smirk",j:"にやにや"},{p:"naughty smile",j:"いたずらな笑顔"},{p:"disdain",j:"軽蔑"},{p:"disgusted",j:"嫌悪感"},{p:"evil smile",j:"悪い笑顔"},{p:"grimace",j:"顔をゆがめる"},{p:"sneer",j:"冷笑"},{p:"painful",j:"苦しい表情"}
+    ],
+    "😐 特殊・汎用表情": [
+      {p:"expressionless",j:"無表情"},{p:"serious",j:"真面目"},{p:"tired",j:"疲れた"},{p:"sleepy",j:"眠い"},{p:"drunk",j:"酔っぱらい"},{p:"closed eyes",j:"目を閉じる"},{p:"open mouth",j:"口が開いている"},{p:"stick out tongue",j:"舌を出す"},{p:"ahegao",j:"アヘ顔"},{p:"blush",j:"赤面"},{p:"full-face blush",j:"顔全体が真っ赤"},{p:"nose blush",j:"鼻の辺りが赤面"},{p:"wink",j:"ウインク"},{p:"embarrassed",j:"恥ずかしい"},{p:"jitome",j:"ジト目"},{p:"upturned eyes",j:"上目遣い"},{p:"heart-shaped pupils",j:"ハート型の瞳"},{p:"heterochromia",j:"オッドアイ"},{p:"fang",j:"八重歯"},{p:"determined",j:"決意"},{p:"biting the lower lip",j:"下唇を噛む"},{p:"squinting",j:"目を細める"},{p:"twinkle in the eyes",j:"キラキラした瞳"}
+    ]
+  },
+
+  "👁 視線・目線": {
+    "👁 視線・目線": [
+      {p:"looking at viewer",j:"カメラ目線"},{p:"looking away",j:"よそ見"},{p:"looking up",j:"上目遣い"},{p:"looking down",j:"見下ろす"},{p:"looking at viewer, profile",j:"横目で見る"},{p:"looking back",j:"振り返る"},{p:"eyes widen",j:"目を見開く"},{p:"shutting eyes",j:"目をつむる"},{p:"look far away",j:"遠くを見る"},{p:"narrow one's eyes",j:"目を細める"},{p:"angle from the front",j:"正面から"},{p:"eyes out of focus",j:"焦点が定まらない"},{p:"one's eyes wandering",j:"きょろきょろ"}
+    ]
+  },
+
+  "💇 髪型・髪色・髪質": {
+    "📏 髪の長さ": [
+      {p:"absurdly long hair",j:"超ロング"},{p:"very long hair",j:"とても長い"},{p:"long hair",j:"ロング"},{p:"medium hair",j:"ミディアム"},{p:"shoulder length",j:"肩の長さ"},{p:"short hair",j:"ショート"},{p:"very short hair",j:"ベリーショート"},{p:"extra short",j:"超ショート"},{p:"mannish hair",j:"マニッシュ"}
+    ],
+    "💈 髪型": [
+      {p:"straight hair",j:"ストレート"},{p:"curly hair",j:"巻き髪"},{p:"inwardly curled hair",j:"内巻き"},{p:"outward curled hair",j:"外巻き"},{p:"twintails",j:"ツインテール"},{p:"low twintails",j:"低めツインテ"},{p:"short twintails",j:"ショートツインテ"},{p:"ponytail",j:"ポニーテール"},{p:"side ponytail",j:"サイドポニー"},{p:"bob cut",j:"ボブカット"},{p:"fluffy bob cut",j:"ふわふわボブ"},{p:"hime cut",j:"姫カット"},{p:"braid",j:"三つ編み"},{p:"french braid",j:"フレンチブレイド"},{p:"twin braids",j:"ツインブレイド"},{p:"fish-bone braid hair",j:"フィッシュボーン"},{p:"cornrow",j:"コーンロウ"},{p:"hair bun",j:"お団子"},{p:"messy bun",j:"ゆるいお団子"},{p:"chignon",j:"シニヨン"},{p:"half updo",j:"ハーフアップ"},{p:"half bun",j:"ハーフお団子"},{p:"drill hair",j:"ドリルヘア"},{p:"wavy hair",j:"ウェーブ"},{p:"dreadlocks",j:"ドレッド"},{p:"afro",j:"アフロ"},{p:"slicked back hair",j:"オールバック"},{p:"mullet hairstyle",j:"マレット"},{p:"shaggy",j:"シャギー"}
+    ],
+    "✨ 髪質": [
+      {p:"silky hair",j:"シルキー"},{p:"shiny hair",j:"ツヤツヤ"},{p:"wet hair",j:"濡れ髪"},{p:"voluminous hair",j:"ボリューミー"},{p:"fine hair",j:"細い毛"},{p:"thick hair",j:"太い毛"},{p:"messy hair",j:"ぼさぼさ"},{p:"airy hair",j:"エアリー"},{p:"coarse hair",j:"硬い毛"},{p:"frizzy hair",j:"くせ毛"},{p:"oily hair",j:"ベタつく"},{p:"damaged hair",j:"傷んだ髪"},{p:"dry hair",j:"乾燥した髪"},{p:"wig",j:"ウィッグ"}
+    ],
+    "🎨 髪色": [
+      {p:"black hair",j:"黒髪"},{p:"jet black hair",j:"漆黒"},{p:"blonde hair",j:"金髪"},{p:"ash blonde hair",j:"アッシュブロンド"},{p:"white hair",j:"白髪"},{p:"silver hair",j:"シルバー"},{p:"pink hair",j:"ピンク髪"},{p:"red hair",j:"赤髪"},{p:"burgundy hair",j:"ワインレッド"},{p:"orange hair",j:"オレンジ髪"},{p:"yellow hair",j:"イエロー"},{p:"brown hair",j:"ブラウン"},{p:"light brown hair",j:"ライトブラウン"},{p:"dark brown hair",j:"ダークブラウン"},{p:"purple hair",j:"紫髪"},{p:"blue hair",j:"青髪"},{p:"sky blue hair",j:"水色"},{p:"green hair",j:"緑髪"},{p:"yellow green hair",j:"黄緑"},{p:"copper hair",j:"銅色"},{p:"two-tone hair",j:"ツートン"},{p:"streaked hair",j:"メッシュ"},{p:"gradation color hair",j:"グラデ"},{p:"colored inner hair",j:"インナーカラー"},{p:"pale hair",j:"淡いカラー"},{p:"deep hair",j:"深みのある色"}
+    ]
+  },
+
+  "🤸 ポーズ・構図": {
+    "🙆 身体のポーズ": [
+      {p:"standing",j:"立っている"},{p:"sitting",j:"座っている"},{p:"walking",j:"歩いている"},{p:"running",j:"走っている"},{p:"jumping",j:"ジャンプ"},{p:"dancing",j:"踊っている"},{p:"spinning",j:"回転"},{p:"kneeling",j:"跪く"},{p:"squatting",j:"しゃがむ"},{p:"all fours",j:"四つん這い"},{p:"cross-legged",j:"あぐら"},{p:"bowing",j:"お辞儀"},{p:"arched back",j:"反り返る"},{p:"leaning forward",j:"前傾み"},{p:"stand against the wall",j:"壁に寄りかかる"},{p:"leaning on wall",j:"壁に凭れる"},{p:"back view",j:"後ろ姿"},{p:"profile view",j:"横向き"},{p:"look back",j:"振り返る"},{p:"dynamic pose",j:"ダイナミック"},{p:"acrobatic pose",j:"アクロバティック"},{p:"yoga pose",j:"ヨガ"},{p:"handstand",j:"逆立ち"},{p:"balancing",j:"バランス"},{p:"stretching",j:"ストレッチ"},{p:"Standing in honor",j:"気をつけ"}
+    ],
+    "🤚 手・指のポーズ": [
+      {p:"peace sign",j:"ピースサイン"},{p:"double peace",j:"両手ピース"},{p:"jaw peace",j:"顎ピース"},{p:"thumbs up",j:"サムズアップ"},{p:"finger pointing",j:"指差し"},{p:"OK gesture",j:"OKサイン"},{p:"paw pose",j:"猫ポーズ"},{p:"finger guns",j:"指鉄砲"},{p:"waving",j:"手を振る"},{p:"hand on hip",j:"腰に手"},{p:"hands behind head",j:"頭の後ろで手を組む"},{p:"salute",j:"敬礼"},{p:"victory pose",j:"ビクトリー"},{p:"arms raised in the air",j:"両手を上げる"},{p:"hands together",j:"手を合わせる"},{p:"Korean Finger Heart",j:"韓国式指ハート"},{p:"heart pose",j:"ハートポーズ"},{p:"forming a heart with hands",j:"指ハート"},{p:"cat ears pose",j:"猫耳ポーズ"},{p:"rock hand gesture",j:"ロックサイン"},{p:"face palm",j:"顔に手"},{p:"put index finger on mouth",j:"口元に指"},{p:"reaching out",j:"手を伸ばす"},{p:"fingers crossed",j:"指を交差"},{p:"stroking own chin",j:"顎に手"},{p:"holding a phone",j:"スマホ"},{p:"holding an umbrella",j:"傘を持つ"},{p:"holding a bag",j:"バッグを持つ"}
+    ],
+    "📷 構図・カメラアングル": [
+      {p:"from above",j:"俯瞰"},{p:"high angle",j:"ハイアングル"},{p:"from very high",j:"高い位置から"},{p:"from below",j:"ローアングル"},{p:"from side",j:"横から"},{p:"from behind",j:"後ろから"},{p:"tilted shot",j:"斜めアングル"},{p:"dutch angle",j:"ダッチアングル"},{p:"dynamic angle",j:"ダイナミック"},{p:"wide shot",j:"広角"},{p:"close-up",j:"クローズアップ"},{p:"extreme close-up",j:"超接近"},{p:"medium shot",j:"ミディアム"},{p:"full body shot",j:"全身"},{p:"cowboy shot",j:"腰から上"},{p:"tracking shot",j:"トラッキング"},{p:"depth of field",j:"被写界深度"},{p:"first-person view",j:"POV視点"},{p:"third-person view",j:"三人称"},{p:"portrait",j:"ポートレート"}
+    ]
+  },
+
+  "_bigcat_background": "🌄 背景・環境",
+
+  "🌄 背景・風景": {
+    "☁ 天気・時間帯": [
+      {p:"clear sky",j:"晴れ"},{p:"night sky",j:"夜空"},{p:"sunrise",j:"日の出"},{p:"sunset",j:"夕暮れ"},{p:"in the morning",j:"朝"},{p:"in the noon",j:"昼"},{p:"in the evening",j:"夕方"},{p:"midnight",j:"真夜中"},{p:"cloudy sky",j:"曇り"},{p:"rain",j:"雨"},{p:"light rain",j:"小雨"},{p:"heavy rain",j:"大雨"},{p:"thunder",j:"雷"},{p:"fog",j:"霧"},{p:"wind",j:"風"},{p:"sun",j:"太陽"},{p:"full moon",j:"満月"},{p:"crescent moon",j:"三日月"},{p:"starry sky",j:"星空"},{p:"aurora",j:"オーロラ"},{p:"Snowy",j:"雪景色"},{p:"heavy snowing",j:"大雪"}
+    ],
+    "🌲 自然": [
+      {p:"forest",j:"森"},{p:"tree",j:"木"},{p:"cherry blossoms",j:"桜"},{p:"sunflower field",j:"ひまわり畑"},{p:"mountain",j:"山"},{p:"ocean",j:"海"},{p:"beach",j:"砂浜"},{p:"river",j:"川"},{p:"waterfall",j:"滝"},{p:"lake",j:"湖"},{p:"cave",j:"洞窟"},{p:"island",j:"島"},{p:"desert",j:"砂漠"},{p:"grassland",j:"草原"},{p:"flower",j:"花"},{p:"vineyard",j:"ブドウ畑"},{p:"rice field",j:"田んぼ"},{p:"under the sea",j:"海中"},{p:"snow-capped mountain",j:"雪山"},{p:"canal",j:"運河"},{p:"bridge",j:"橋"},{p:"boat",j:"ボート"}
+    ],
+    "🏙 日常・室内": [
+      {p:"indoor",j:"室内"},{p:"outside",j:"屋外"},{p:"rooftop",j:"屋上"},{p:"kitchen",j:"キッチン"},{p:"dining",j:"ダイニング"},{p:"living room",j:"リビング"},{p:"bedroom",j:"寝室"},{p:"bathroom",j:"浴室"},{p:"classroom",j:"教室"},{p:"school",j:"学校"},{p:"office",j:"オフィス"},{p:"cafe",j:"カフェ"},{p:"restaurant",j:"レストラン"},{p:"bar",j:"バー"},{p:"convenience store",j:"コンビニ"},{p:"supermarket",j:"スーパー"},{p:"book shop",j:"書店"},{p:"flower shop",j:"花屋"},{p:"gym",j:"ジム"},{p:"garden",j:"庭"},{p:"Japanese-style room",j:"和室"},{p:"on the train",j:"電車の中"}
+    ],
+    "🏛 公共の場・街": [
+      {p:"city",j:"都市"},{p:"downtown",j:"繁華街"},{p:"park",j:"公園"},{p:"airport",j:"空港"},{p:"harbor",j:"港"},{p:"train station",j:"駅"},{p:"library",j:"図書館"},{p:"hospital",j:"病院"},{p:"church",j:"教会"},{p:"shrine",j:"神社"},{p:"temple",j:"寺院"},{p:"castle",j:"城"},{p:"ruins",j:"廃墟"},{p:"construction site",j:"建設現場"},{p:"university",j:"大学"},{p:"shopping mall",j:"ショッピングモール"},{p:"night market",j:"夜市"},{p:"street",j:"通り"},{p:"underground mall",j:"地下街"}
+    ],
+    "🎡 エンタメ・レジャー": [
+      {p:"amusement park",j:"遊園地"},{p:"aquarium",j:"水族館"},{p:"festival",j:"祭り"},{p:"onsen",j:"温泉"},{p:"ryokan",j:"旅館"},{p:"zoo",j:"動物園"},{p:"museum",j:"博物館"},{p:"camp site",j:"キャンプ場"},{p:"ski resort",j:"スキー場"},{p:"theater",j:"劇場"},{p:"concert hall",j:"コンサートホール"},{p:"hotel room",j:"ホテル"},{p:"idol stage",j:"アイドルステージ"},{p:"Christmas tree",j:"クリスマスツリー"},{p:"carnival",j:"カーニバル"}
+    ],
+    "🌏 ランドマーク": [
+      {p:"Tokyo Tower",j:"東京タワー"},{p:"Tokyo sky tree",j:"スカイツリー"},{p:"The Eiffel Tower",j:"エッフェル塔"},{p:"The Statue of Liberty",j:"自由の女神"},{p:"colosseum",j:"コロッセオ"},{p:"Pyramid",j:"ピラミッド"},{p:"The Sydney Opera House",j:"オペラハウス"},{p:"Angkor Wat",j:"アンコールワット"},{p:"The Great Wall of China",j:"万里の長城"},{p:"Himalayan Range",j:"ヒマラヤ"},{p:"Kyoto",j:"京都"},{p:"Fushimi Inari Shrine Kyoto",j:"伏見稲荷"},{p:"Paris",j:"パリ"},{p:"New York",j:"ニューヨーク"}
+    ],
+    "🖼 背景スタイル": [
+      {p:"white background",j:"白背景"},{p:"black background",j:"黒背景"},{p:"blurry background",j:"背景ぼかし"},{p:"background transparent",j:"透明背景"},{p:"no background",j:"背景なし"},{p:"fantasy background",j:"ファンタジー背景"},{p:"crowd",j:"群衆"},{p:"background only",j:"背景のみ"}
+    ]
+  },
+
+  "_bigcat_quality": "✨ 演出・品質",
+
+  "💡 光・ライティング": {
+    "🌞 自然の光": [
+      {p:"sunlight",j:"日光"},{p:"sunbeam",j:"太陽光線"},{p:"dappled sunlight",j:"木漏れ日"},{p:"bloom",j:"明るい自然光"},{p:"moonlight",j:"月明かり"},{p:"darkness",j:"暗闇"}
+    ],
+    "🔦 光源の方向": [
+      {p:"backlighting",j:"逆光"},{p:"spotlight",j:"スポットライト"},{p:"side lighting",j:"サイドライト"},{p:"under lighting",j:"下からの光"},{p:"stage lighting",j:"ステージ照明"}
+    ],
+    "✨ ライティング効果": [
+      {p:"cinematic lighting",j:"映画的な光"},{p:"volumetric lighting",j:"ボリューム光"},{p:"rim lighting",j:"リムライト"},{p:"dynamic lighting",j:"ダイナミック光"},{p:"crepuscular rays",j:"放射状の光"},{p:"bokeh",j:"ボケ効果"},{p:"dimly lit",j:"薄暗い"}
+    ],
+    "💪 光の強さ": [
+      {p:"strong light",j:"強い光"},{p:"light sparkles",j:"輝く光"},{p:"low-intensity lighting",j:"弱い光"},{p:"soft lighting",j:"柔らかい光"}
+    ],
+    "🌡 明るさ・彩度・コントラスト": [
+      {p:"high brightness",j:"高い明度"},{p:"low brightness",j:"低い明度"},{p:"soft brightness",j:"ソフトな明度"},{p:"high saturation",j:"高い彩度"},{p:"low saturation",j:"低い彩度"},{p:"soft saturation",j:"ソフトな彩度"},{p:"high contrast",j:"高コントラスト"},{p:"low contrast",j:"低コントラスト"},{p:"soft contrast",j:"ソフトコントラスト"}
+    ]
+  },
+
+  "🖼 画質・品質": {
+    "✅ 品質向上（ポジティブ）": [
+      {p:"masterpiece",j:"傑作"},{p:"best quality",j:"最高品質"},{p:"ultra detailed",j:"超高精細"},{p:"high resolution",j:"高解像度"},{p:"4k",j:"4K"},{p:"8k",j:"8K"},{p:"extremely detailed CG",j:"超高精細CG"},{p:"super fine illustration",j:"超絶技巧"},{p:"oil painting",j:"油絵風"},{p:"watercolor painting",j:"水彩画風"},{p:"photorealistic",j:"フォトリアル"},{p:"HDR",j:"HDR"}
+    ],
+    "❌ 品質低下防止（ネガティブ用）": [
+      {p:"worst quality",j:"最悪品質"},{p:"low quality",j:"低品質"},{p:"poor quality",j:"貧弱品質"},{p:"bad quality",j:"悪い品質"},{p:"terrible quality",j:"ひどい品質"},{p:"awful quality",j:"とても悪い品質"},{p:"subpar quality",j:"平均以下"},{p:"normal quality",j:"普通品質"},{p:"out of focus",j:"ピンボケ"},{p:"blurry",j:"ぼやけ"},{p:"grainy",j:"粒子粗い"},{p:"pixelated",j:"ピクセル化"},{p:"jpeg artifacts",j:"JPEG劣化"},{p:"lowres",j:"低解像度"},{p:"error",j:"エラー"},{p:"ugly",j:"醜い"}
+    ]
+  },
+
+  "🎨 色": {
+    "🔴 赤系": [{p:"red",j:"赤"},{p:"indianred",j:"インディアンレッド"},{p:"lightcoral",j:"ライトコーラル"},{p:"tomato",j:"トマトレッド"},{p:"crimson",j:"クリムゾン"},{p:"coral",j:"コーラル"},{p:"darkred",j:"ダークレッド"}],
+    "🟡 黄色系": [{p:"yellow",j:"黄色"},{p:"gold",j:"ゴールド"},{p:"goldenrod",j:"ゴールデンロッド"},{p:"darkgoldenrod",j:"ダークゴールド"},{p:"lemon chiffon",j:"レモンシフォン"},{p:"light-yellow",j:"薄い黄色"}],
+    "🩷 ピンク系": [{p:"pink",j:"ピンク"},{p:"light-pink",j:"ライトピンク"},{p:"hot-pink",j:"ホットピンク"},{p:"deep-pink",j:"ディープピンク"},{p:"salmon",j:"サーモン"},{p:"dark salmon",j:"ダークサーモン"},{p:"light salmon",j:"ライトサーモン"}],
+    "🟠 オレンジ系": [{p:"orange",j:"オレンジ"},{p:"darkorange",j:"ダークオレンジ"},{p:"orangered",j:"オレンジレッド"}],
+    "🟣 紫系": [{p:"purple",j:"紫"},{p:"violet",j:"バイオレット"},{p:"darkviolet",j:"ダークバイオレット"},{p:"magenta",j:"マゼンタ"},{p:"fuchsia",j:"フクシア"},{p:"plum",j:"プラム"},{p:"lavenderblush",j:"ラベンダーブラッシュ"},{p:"medium purple",j:"ミディアムパープル"}],
+    "🟢 緑系": [{p:"green",j:"緑"},{p:"lime green",j:"ライムグリーン"},{p:"forestgreen",j:"フォレストグリーン"},{p:"sea-green",j:"シーグリーン"},{p:"spring-green",j:"スプリンググリーン"},{p:"olive",j:"オリーブ"},{p:"darkgreen",j:"ダークグリーン"},{p:"lightgreen",j:"ライトグリーン"},{p:"palegreen",j:"ペールグリーン"}],
+    "⬜ 白系": [{p:"white",j:"白"},{p:"ivory",j:"アイボリー"},{p:"snow",j:"スノーホワイト"},{p:"ghostwhite",j:"ゴーストホワイト"},{p:"whitesmoke",j:"ホワイトスモーク"},{p:"antique-white",j:"アンティークホワイト"}],
+    "🔵 青系": [{p:"blue",j:"青"},{p:"navy",j:"ネイビー"},{p:"midnightblue",j:"ミッドナイトブルー"},{p:"blue violet",j:"ブルーバイオレット"},{p:"skyblue",j:"スカイブルー"},{p:"turquoise",j:"ターコイズ"},{p:"cyan",j:"シアン"}]
+  },
+
+  "🖌 画風・絵柄": {
+    "🖌 画風・アートスタイル": [
+      {p:"super fine illustration",j:"超絶技巧"},{p:"watercolor",j:"水彩画風"},{p:"oil painting",j:"油絵風"},{p:"pixel art",j:"ドット絵"},{p:"sketch",j:"スケッチ風"},{p:"ink",j:"インク画"},{p:"monochrome",j:"モノクロ"},{p:"silhouette",j:"シルエット"},{p:"cyber punk",j:"サイバーパンク"},{p:"chibi character",j:"チビキャラ"},{p:"anime style",j:"アニメ"},{p:"realistic",j:"リアル"},{p:"flat color",j:"フラットカラー"},{p:"retro style",j:"レトロ"},{p:"cover",j:"表紙風"},{p:"impressionism",j:"印象派"},{p:"surrealism",j:"シュルレアリスム"},{p:"minimalist",j:"ミニマリスト"},{p:"concept art",j:"コンセプトアート"},{p:"fantasy art",j:"ファンタジーアート"}
+    ]
+  },
+
+  "🚫 ネガティブプロンプト": {
+    "🌟 必須テンプレ": [
+      {p:"worst quality",j:"最悪品質"},{p:"low quality",j:"低品質"},{p:"normal quality",j:"普通品質"},{p:"out of focus",j:"ピンボケ"},{p:"blurry",j:"ぼやけ"},{p:"ugly",j:"醜い"},{p:"bad anatomy",j:"解剖崩れ"},{p:"jpeg artifacts",j:"JPEG劣化"},{p:"lowres",j:"低解像度"},{p:"error",j:"エラー"}
+    ],
+    "🛡 作画崩壊防止": [
+      {p:"longbody",j:"胴体が長い"},{p:"gross proportions",j:"比率崩れ"},{p:"mutation",j:"変形"},{p:"distorted",j:"歪み"},{p:"long_neck",j:"首が長い"},{p:"mutated hands",j:"変形した手"},{p:"mutated fingers",j:"変形した指"},{p:"mutated limbs",j:"変形した手足"},{p:"missing arms",j:"腕なし"},{p:"extra_arms",j:"余分な腕"},{p:"extra_legs",j:"余分な足"},{p:"bad hands",j:"崩れた手"},{p:"poorly_drawn_hands",j:"雑な手"},{p:"malformed_hands",j:"奇形の手"},{p:"missing_limb",j:"手足欠け"},{p:"disconnected_limbs",j:"手足分離"},{p:"inaccurate limb",j:"不正確な手足"},{p:"floating_limbs",j:"浮いた手足"},{p:"extra_fingers",j:"余分な指"},{p:"extra digit",j:"余分な指"},{p:"missing fingers",j:"指なし"},{p:"fewer digits",j:"指が少ない"},{p:"bad fingers",j:"崩れた指"},{p:"liquid fingers",j:"溶けた指"},{p:"ugly face",j:"醜い顔"},{p:"bad face",j:"崩れた顔"},{p:"partial face",j:"顔切れ"},{p:"deformed eyes",j:"歪んだ目"},{p:"cropped",j:"画像切れ"},{p:"humpbacked",j:"猫背"},{p:"bad proportions",j:"プロポーション崩れ"}
+    ],
+    "🔞 不適切要素防止": [
+      {p:"nsfw",j:"成人向け"},{p:"nipples",j:"乳首"},{p:"pubic hair",j:"陰毛"}
+    ],
+    "📝 テキスト・ロゴ除去": [
+      {p:"text",j:"テキスト"},{p:"watermark",j:"透かし"},{p:"signature",j:"サイン"},{p:"logo",j:"ロゴ"},{p:"banner",j:"バナー"},{p:"username",j:"ユーザー名"},{p:"stamp",j:"スタンプ"},{p:"artist name",j:"作者名"},{p:"date",j:"日付"},{p:"footer",j:"フッター"},{p:"header",j:"ヘッダー"}
+    ],
+    "🎭 表情・スタイル除外": [
+      {p:"make-up",j:"メイク"},{p:"blush",j:"赤面"},{p:"open mouth",j:"口開き"},{p:"rouge",j:"口紅"},{p:"mascara",j:"マスカラ"},{p:"freckles",j:"そばかす"},{p:"half-open eyes",j:"半開き目"},{p:"sketch",j:"スケッチ排除"},{p:"oil painting",j:"油絵排除"},{p:"watercolor",j:"水彩排除"},{p:"monochrome",j:"モノクロ排除"},{p:"flat color",j:"フラット排除"},{p:"retro style",j:"レトロ排除"}
+    ],
+    "🔲 構図崩れ防止": [
+      {p:"multiple angle",j:"複数アングル"},{p:"split view",j:"分割画像"},{p:"two shot",j:"ツーショット防止"},{p:"grid view",j:"グリッド"},{p:"cropped",j:"切り取り"},{p:"out of frame",j:"フレーム外"},{p:"bad composition",j:"悪い構図"}
+    ]
+  },
+
+  // ---- 大カテゴリ: 🛠 カスタム ----
+  "_bigcat_custom": "🛠 カスタム",
+  "➕ マイプロンプト": {}
+};
+
+// Big category ordering
+const bigCatOrder = [
+  {key:"_bigcat_clothing", cats:["👕 トップス","🧥 アウター","👖 ボトムス","👗 ワンピース・ドレス","🎽 制服・コスチューム","👙 水着・下着","🧦 靴下・靴","💍 アクセサリー","👒 帽子・ヘッドウェア","👘 和服・民族衣装","🎀 ファッションスタイル","👔 袖・襟・ネックライン","🧵 素材・柄・状態"]},
+  {key:"_bigcat_character", cats:["🧑 人物基本","😊 表情・顔","👁 視線・目線","💇 髪型・髪色・髪質","🤸 ポーズ・構図"]},
+  {key:"_bigcat_background", cats:["🌄 背景・風景"]},
+  {key:"_bigcat_quality", cats:["💡 光・ライティング","🖼 画質・品質","🎨 色","🖌 画風・絵柄","🚫 ネガティブプロンプト"]},
+  {key:"_bigcat_custom", cats:["➕ マイプロンプト"]}
+];
+
+// ============================================================
+//  STATE
+// ============================================================
+let selectedPrompts = [];
+let currentCategory = null;
+let copyHistory = JSON.parse(localStorage.getItem('sdpb_history')||'[]');
+let customData = JSON.parse(localStorage.getItem('sdpb_custom')||'{}');
+// merge custom data
+if(Object.keys(customData).length) DATA["➕ マイプロンプト"] = {...customData};
+
+// Search index
+let searchIndex = [];
+function buildSearchIndex(){
+  searchIndex = [];
+  Object.keys(DATA).forEach(cat=>{
+    if(cat.startsWith('_bigcat_')) return;
+    const subs = DATA[cat];
+    Object.keys(subs).forEach(sub=>{
+      subs[sub].forEach(item=>{
+        searchIndex.push({p:item.p, j:item.j, cat, sub});
+      });
+    });
+  });
+}
+buildSearchIndex();
+
+// ============================================================
+//  PRESETS
+// ============================================================
+const PRESETS = [
+  {name:"🎀 アニメ美少女（基本）", prompts:["masterpiece","best quality","1girl","solo","anime style","smile","looking at viewer"]},
+  {name:"📸 リアル系ポートレート", prompts:["masterpiece","best quality","photorealistic","1girl","solo","portrait","depth of field","soft lighting"]},
+  {name:"🌸 桜×制服", prompts:["masterpiece","best quality","1girl","school uniform","cherry blossoms","spring","smile","wind"]},
+  {name:"🌃 サイバーパンク", prompts:["masterpiece","best quality","1girl","cyber fashion","neon lights","city","night sky","dynamic lighting"]},
+  {name:"🏖 ビーチ", prompts:["masterpiece","best quality","1girl","bikini","beach","ocean","sunset","summer"]},
+  {name:"🎭 ゴスロリ", prompts:["masterpiece","best quality","1girl","gothic lolita","black dress","lace","choker","dark background"]},
+  {name:"🖼 風景（人物なし）", prompts:["masterpiece","best quality","no humans","fantasy background","cinematic lighting","starry sky","full moon"]},
+  {name:"🚫 ネガティブ基本セット", prompts:["worst quality","low quality","bad anatomy","bad hands","mutated fingers","ugly","blurry","jpeg artifacts","lowres","nsfw"]}
+];
+
+// ============================================================
+//  THEME
+// ============================================================
+const savedTheme = localStorage.getItem('sdpb_theme')||'dark';
+document.body.setAttribute('data-theme', savedTheme);
+
+document.addEventListener('DOMContentLoaded', ()=>{
+  document.querySelectorAll('.theme-btn').forEach(btn=>{
+    if(btn.dataset.theme===savedTheme) btn.classList.add('active');
+    else btn.classList.remove('active');
+    btn.addEventListener('click',()=>{
+      document.body.setAttribute('data-theme', btn.dataset.theme);
+      localStorage.setItem('sdpb_theme', btn.dataset.theme);
+      document.querySelectorAll('.theme-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+});
+
+// ============================================================
+//  SIDEBAR
+// ============================================================
+function buildSidebar(){
+  const sb = document.getElementById('sidebar');
+  let html = '';
+  bigCatOrder.forEach(bc=>{
+    html += `<div class="cat-big">${DATA[bc.key]}</div>`;
+    bc.cats.forEach(cat=>{
+      const cls = cat==='➕ マイプロンプト'?' custom-cat':'';
+      html += `<div class="cat-item${cls}" data-cat="${cat}">${cat}</div>`;
+    });
+  });
+  sb.innerHTML = html;
+  sb.querySelectorAll('.cat-item').forEach(el=>{
+    el.addEventListener('click',()=>{
+      sb.querySelectorAll('.cat-item').forEach(e=>e.classList.remove('active'));
+      el.classList.add('active');
+      showCategory(el.dataset.cat);
+    });
+  });
+  const first = sb.querySelector('.cat-item');
+  if(first) first.click();
+}
+
+// ============================================================
+//  SHOW CATEGORY
+// ============================================================
+function showCategory(catName){
+  currentCategory = catName;
+  const cont = document.getElementById('content');
+  const catData = DATA[catName];
+  if(!catData){cont.innerHTML='';return;}
+
+  let html = `<div class="content-title">${catName}</div>`;
+
+  if(catName==='➕ マイプロンプト'){
+    html += `<div style="margin-bottom:14px;"><button class="btn btn-copy" onclick="openCustomModal()" style="font-size:.78rem;">➕ 新しいプロンプトを追加</button></div>`;
+  }
+
+  const subs = Object.keys(catData);
+  if(subs.length===0 && catName==='➕ マイプロンプト'){
+    html += `<p style="color:var(--text-dim);font-size:.85rem;">まだカスタムプロンプトがありません。上のボタンから追加してください。</p>`;
+  }
+
+  subs.forEach(subName=>{
+    html += `<div class="sub-heading">${esc(subName)}</div><div class="tag-grid">`;
+    catData[subName].forEach(item=>{
+      const sel = selectedPrompts.includes(item.p)?' selected':'';
+      html += `<button class="tag-btn${sel}" data-prompt="${esc(item.p)}" title="${esc(item.j)}">${esc(item.p)}<span class="tag-hint">${esc(item.j)}</span></button>`;
+    });
+    html += `</div>`;
+  });
+  cont.innerHTML = html;
+
+  cont.querySelectorAll('.tag-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>togglePrompt(btn.dataset.prompt, btn));
+  });
+}
+
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+// ============================================================
+//  TOGGLE / UPDATE
+// ============================================================
+function togglePrompt(prompt, btnEl){
+  const idx = selectedPrompts.indexOf(prompt);
+  if(idx>-1){selectedPrompts.splice(idx,1);if(btnEl)btnEl.classList.remove('selected');}
+  else{selectedPrompts.push(prompt);if(btnEl)btnEl.classList.add('selected');}
+  updateDisplay();
+}
+
+function updateDisplay(){
+  document.getElementById('promptBox').textContent = selectedPrompts.join(', ');
+  // token counter
+  const tc = document.getElementById('tokenCounter');
+  const count = selectedPrompts.reduce((a,p)=>a+p.split(/\s+/).length, 0);
+  tc.textContent = `トークン: 約${count} / 75`;
+  tc.className = 'token-counter' + (count>75?' danger':count>60?' warn':'');
+
+  // selected tags
+  const tagsEl = document.getElementById('selectedTags');
+  let html = '';
+  selectedPrompts.forEach((p,i)=>{
+    html += `<span class="selected-tag" draggable="true" data-idx="${i}" data-prompt="${esc(p)}">${esc(p)}<span class="remove" data-prompt="${esc(p)}">&times;</span></span>`;
+  });
+  tagsEl.innerHTML = html;
+
+  tagsEl.querySelectorAll('.remove').forEach(el=>{
+    el.addEventListener('click',e=>{e.stopPropagation();removePrompt(el.dataset.prompt);});
+  });
+
+  // drag
+  tagsEl.querySelectorAll('.selected-tag').forEach(tag=>{
+    tag.addEventListener('dragstart',e=>{
+      e.dataTransfer.setData('text/plain',tag.dataset.idx);
+      tag.classList.add('dragging');
+    });
+    tag.addEventListener('dragend',()=>tag.classList.remove('dragging'));
+    tag.addEventListener('dragover',e=>{e.preventDefault();});
+    tag.addEventListener('drop',e=>{
+      e.preventDefault();
+      const fromIdx = parseInt(e.dataTransfer.getData('text/plain'));
+      const toIdx = parseInt(tag.dataset.idx);
+      if(fromIdx!==toIdx){
+        const item = selectedPrompts.splice(fromIdx,1)[0];
+        selectedPrompts.splice(toIdx,0,item);
+        updateDisplay();
+        refreshContentBtns();
+      }
+    });
+  });
+}
+
+function refreshContentBtns(){
+  document.querySelectorAll('.tag-btn').forEach(btn=>{
+    btn.classList.toggle('selected', selectedPrompts.includes(btn.dataset.prompt));
+  });
+}
+
+function removePrompt(prompt){
+  const idx = selectedPrompts.indexOf(prompt);
+  if(idx>-1) selectedPrompts.splice(idx,1);
+  updateDisplay();
+  refreshContentBtns();
+}
+
+// ============================================================
+//  COPY / CLEAR
+// ============================================================
+function copyPrompt(){
+  const text = selectedPrompts.join(', ');
+  if(!text){showToast('⚠ プロンプトが選択されていません');return;}
+  navigator.clipboard.writeText(text).then(()=>{
+    showToast('✅ コピーしました！');
+    saveHistory(text);
+  }).catch(()=>{
+    const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
+    showToast('✅ コピーしました！');
+    saveHistory(text);
+  });
+}
+
+function clearAll(){
+  selectedPrompts=[];
+  updateDisplay();
+  refreshContentBtns();
+  showToast('🗑 全消去しました');
+}
+
+// ============================================================
+//  HISTORY
+// ============================================================
+function saveHistory(text){
+  const entry = {text, date:new Date().toLocaleString('ja-JP')};
+  copyHistory.unshift(entry);
+  if(copyHistory.length>20) copyHistory.pop();
+  localStorage.setItem('sdpb_history', JSON.stringify(copyHistory));
+}
+
+function openHistoryModal(){
+  const list = document.getElementById('historyList');
+  if(copyHistory.length===0){list.innerHTML='<p style="color:var(--text-dim);font-size:.82rem;">まだ履歴がありません</p>';}
+  else{
+    list.innerHTML = copyHistory.map((h,i)=>`<div class="history-item" data-idx="${i}"><span class="hi-del" data-idx="${i}">🗑</span><div class="hi-date">${esc(h.date)}</div>${esc(h.text)}</div>`).join('');
+    list.querySelectorAll('.history-item').forEach(el=>{
+      el.addEventListener('click',e=>{
+        if(e.target.classList.contains('hi-del')){
+          copyHistory.splice(parseInt(e.target.dataset.idx),1);
+          localStorage.setItem('sdpb_history',JSON.stringify(copyHistory));
+          openHistoryModal();
+          return;
+        }
+        const h = copyHistory[parseInt(el.dataset.idx)];
+        selectedPrompts = h.text.split(', ').filter(Boolean);
+        updateDisplay();
+        refreshContentBtns();
+        closeModal('historyModal');
+        showToast('📂 履歴を読み込みました');
+      });
+    });
+  }
+  document.getElementById('historyModal').classList.add('show');
+}
+
+// ============================================================
+//  PRESETS
+// ============================================================
+function openPresetModal(){
+  const list = document.getElementById('presetList');
+  list.innerHTML = PRESETS.map((pr,i)=>`<div class="preset-item" data-idx="${i}"><div class="pi-name">${esc(pr.name)}</div><div class="pi-prompt">${esc(pr.prompts.join(', '))}</div></div>`).join('');
+  list.querySelectorAll('.preset-item').forEach(el=>{
+    el.addEventListener('click',()=>{
+      const pr = PRESETS[parseInt(el.dataset.idx)];
+      pr.prompts.forEach(p=>{if(!selectedPrompts.includes(p))selectedPrompts.push(p);});
+      updateDisplay();
+      refreshContentBtns();
+      closeModal('presetModal');
+      showToast('⭐ プリセットを追加しました');
+    });
+  });
+  document.getElementById('presetModal').classList.add('show');
+}
+
+// ============================================================
+//  CUSTOM PROMPT
+// ============================================================
+function openCustomModal(){
+  document.getElementById('customPromptEn').value='';
+  document.getElementById('customPromptJa').value='';
+  document.getElementById('customSubCat').value='';
+  document.getElementById('customModal').classList.add('show');
+}
+
+function addCustomPrompt(){
+  const en = document.getElementById('customPromptEn').value.trim();
+  const ja = document.getElementById('customPromptJa').value.trim()||en;
+  const sub = document.getElementById('customSubCat').value.trim()||'✏️ カスタム';
+  if(!en){showToast('⚠ 英語プロンプトを入力してください');return;}
+
+  if(!customData[sub]) customData[sub]=[];
+  if(customData[sub].find(x=>x.p===en)){showToast('⚠ 既に存在します');return;}
+  customData[sub].push({p:en,j:ja});
+  localStorage.setItem('sdpb_custom',JSON.stringify(customData));
+  DATA["➕ マイプロンプト"] = {...customData};
+  buildSearchIndex();
+  closeModal('customModal');
+  showCategory('➕ マイプロンプト');
+  showToast('✅ カスタムプロンプトを追加しました');
+}
+
+// ============================================================
+//  SEARCH
+// ============================================================
+const searchInput = document.getElementById('searchInput');
+const searchResults = document.getElementById('searchResults');
+searchInput.addEventListener('input',()=>{
+  const q = searchInput.value.trim().toLowerCase();
+  if(!q){searchResults.classList.remove('show');return;}
+  const hits = searchIndex.filter(x=> x.p.toLowerCase().includes(q)||x.j.toLowerCase().includes(q)).slice(0,30);
+  if(!hits.length){searchResults.innerHTML='<div style="padding:10px;font-size:.78rem;color:var(--text-dim);">見つかりません</div>';searchResults.classList.add('show');return;}
+  searchResults.innerHTML = hits.map(h=>`<div class="search-result-item" data-prompt="${esc(h.p)}"><span class="sr-prompt">${esc(h.p)}</span><span class="sr-ja">${esc(h.j)}</span><span class="sr-cat">${esc(h.cat)}</span></div>`).join('');
+  searchResults.classList.add('show');
+  searchResults.querySelectorAll('.search-result-item').forEach(el=>{
+    el.addEventListener('click',()=>{
+      const p = el.dataset.prompt;
+      if(!selectedPrompts.includes(p)) selectedPrompts.push(p);
+      updateDisplay();
+      refreshContentBtns();
+      searchInput.value='';
+      searchResults.classList.remove('show');
+      showToast(`✅ "${p}" を追加`);
+    });
+  });
+});
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.search-wrap')) searchResults.classList.remove('show');
+});
+
+// ============================================================
+//  MODAL
+// ============================================================
+function closeModal(id){document.getElementById(id).classList.remove('show');}
+document.querySelectorAll('.modal-overlay').forEach(m=>{
+  m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('show');});
+});
+
+// ============================================================
+//  TOAST
+// ============================================================
+function showToast(msg){
+  const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2000);
+}
+
+// ============================================================
+//  INIT
+// ============================================================
+buildSidebar();
+</script>
+</body>
+</html>
